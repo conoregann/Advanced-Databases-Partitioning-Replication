@@ -1,0 +1,69 @@
+# ==========================================================
+# Student: C22466756
+# Phase 3: CouchDB Replication & Conflict Resolution
+# ==========================================================
+
+# 1. CLUSTER VERIFICATION
+# Checking node membership to ensure cluster visibility
+curl http://admin:change_me@localhost:5984/_membership
+
+# 2. DATABASE SETUP
+# Creating source on Node 1 and target on Node 2
+curl -X PUT http://admin:change_me@localhost:5984/inventory_c22466756
+curl -X PUT http://admin:change_me@localhost:5985/inventory_backup_c22466756
+
+# Adding initial data to Source
+curl -X POST http://admin:change_me@localhost:5984/inventory_c22466756 \
+-H "Content-Type: application/json" \
+-d '{"item": "Laptop", "status": "In Stock"}'
+
+# 3. REPLICATION SCENARIOS
+
+# Scenario A: One-Time Replication (Node 1 -> Node 2)
+curl -X POST http://admin:change_me@localhost:5984/_replicate \
+-H "Content-Type: application/json" \
+-d '{
+  "source": "http://admin:change_me@localhost:5984/inventory_c22466756",
+  "target": "http://admin:change_me@couchdb2:5984/inventory_backup_c22466756"
+}'
+
+# Scenario B: Continuous Replication (Node 1 -> Node 2)
+curl -X POST http://admin:change_me@localhost:5984/_replicate \
+-H "Content-Type: application/json" \
+-d '{
+  "source": "http://admin:change_me@localhost:5984/inventory_c22466756",
+  "target": "http://admin:change_me@couchdb2:5984/inventory_backup_c22466756",
+  "continuous": true
+}'
+
+# Testing Continuous: Adding data to Node 1
+curl -X POST http://admin:change_me@localhost:5984/inventory_c22466756 \
+-H "Content-Type: application/json" \
+-d '{"item": "Mouse", "status": "New Arrival"}'
+
+# Scenario C: Bi-Directional (Master-Master)
+# Setting up the reverse stream (Node 2 -> Node 1)
+curl -X POST http://admin:change_me@localhost:5985/_replicate \
+-H "Content-Type: application/json" \
+-d '{
+  "source": "http://admin:change_me@localhost:5984/inventory_backup_c22466756",
+  "target": "http://admin:change_me@couchdb1:5984/inventory_c22466756",
+  "continuous": true
+}'
+
+# 4. CONFLICT RESOLUTION TEST
+# Creating a conflict by updating the same doc on both nodes concurrently
+
+# Update on Node 1
+curl -X PUT http://admin:change_me@localhost:5984/inventory_c22466756/de85b58297660a67fab09d4a810009b6 \
+-H "Content-Type: application/json" \
+-d '{"item": "Laptop", "status": "Sold Out", "_rev": "3-333b0922fa3dc79ed93bb3c5af1e43eb"}'
+
+# Update on Node 2 (Conflict generation)
+curl -X PUT http://admin:change_me@localhost:5985/inventory_backup_c22466756/de85b58297660a67fab09d4a810009b6 \
+-H "Content-Type: application/json" \
+-d '{"item": "Laptop", "status": "Reserved", "_rev": "3-333b0922fa3dc79ed93bb3c5af1e43eb"}'
+
+# 5. INSPECTING CONFLICTS
+# Retrieving the document including conflict metadata
+curl "http://admin:change_me@localhost:5984/inventory_c22466756/_all_docs?include_docs=true&conflicts=true"

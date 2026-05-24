@@ -1,0 +1,5 @@
+{"total_rows":3,"offset":0,"rows":[
+{"id":"c0504f6a69186caf3401c9e9bc001ce1","key":"c0504f6a69186caf3401c9e9bc001ce1","value":{"rev":"1-c8776380266b791228f80a314ad805df"},"doc":{"_id":"c0504f6a69186caf3401c9e9bc001ce1","_rev":"1-c8776380266b791228f80a314ad805df","item":"Monitor","origin":"Node 2"}},
+{"id":"de85b58297660a67fab09d4a810009b6","key":"de85b58297660a67fab09d4a810009b6","value":{"rev":"4-d59a7e4be2af72ec49647ffe9e015309"},"doc":{"_id":"de85b58297660a67fab09d4a810009b6","_rev":"4-d59a7e4be2af72ec49647ffe9e015309","item":"Laptop","status":"Reserved","_conflicts":["4-43a767a31ab0b983e02fac59db6e918c"]}},
+{"id":"de85b58297660a67fab09d4a81000a92","key":"de85b58297660a67fab09d4a81000a92","value":{"rev":"1-1210f04bd3cb9dce73e3b3c07f8ed7a6"},"doc":{"_id":"de85b58297660a67fab09d4a81000a92","_rev":"1-1210f04bd3cb9dce73e3b3c07f8ed7a6","item":"Mouse","status":"New Arrival"}}
+]}

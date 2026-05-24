@@ -1,0 +1,3 @@
+{"total_rows":1,"offset":0,"rows":[
+{"id":"persistent_rep_node2_to_node1","key":"persistent_rep_node2_to_node1","value":{"rev":"1-64951023ffd990cafa47403fa41f00dc"},"doc":{"_id":"persistent_rep_node2_to_node1","_rev":"1-64951023ffd990cafa47403fa41f00dc","source":"http://admin:change_me@couchdb2:5984/inventory_backup_c22466756","target":"http://admin:change_me@localhost:5984/inventory_c22466756","create_target":true,"continuous":true,"owner":"admin"}}
+]}

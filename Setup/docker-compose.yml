@@ -1,0 +1,123 @@
+services:
+  # -------------------------------------------------------
+  # 1. PostgreSQL (Existing Data)
+  # -------------------------------------------------------
+  postgres:
+    image: postgres:17
+    container_name: postgres_C22466756
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-devuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-devdb}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ca3-network
+
+  # -------------------------------------------------------
+  # 2. Cassandra Cluster (Teacher's Config + Ext. Ports)
+  # -------------------------------------------------------
+  cassandra1:
+    image: cassandra:latest
+    container_name: cassandra1_C22466756
+    ports:
+      - "9042:9042" # Connect DBeaver here
+    environment:
+      - CASSANDRA_SEEDS=cassandra1_C22466756,cassandra2_C22466756,cassandra3_C22466756
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+      - CASSANDRA_USER=${CASSANDRA_USER:-cassandra}
+      - CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD:-change_me}
+      - CASSANDRA_PASSWORD_SEEDER=true
+      - CASSANDRA_CLUSTER_NAME=StudentCluster
+      - CASSANDRA_DC=DC1
+      - CASSANDRA_RACK=RACK1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+    volumes:
+      - cassandra1_data:/var/lib/cassandra
+    networks:
+      - ca3-network
+
+  cassandra2:
+    image: cassandra:latest
+    container_name: cassandra2_C22466756
+    ports:
+      - "9043:9042" # Connect DBeaver here to test failover
+    environment:
+      - CASSANDRA_SEEDS=cassandra1_C22466756,cassandra2_C22466756,cassandra3_C22466756
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+      - CASSANDRA_CLUSTER_NAME=StudentCluster
+      - CASSANDRA_DC=DC1
+      - CASSANDRA_RACK=RACK1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+    volumes:
+      - cassandra2_data:/var/lib/cassandra
+    networks:
+      - ca3-network
+
+  cassandra3:
+    image: cassandra:latest
+    container_name: cassandra3_C22466756
+    ports:
+      - "9044:9042" # Connect DBeaver here to test failover
+    environment:
+      - CASSANDRA_SEEDS=cassandra1_C22466756,cassandra2_C22466756,cassandra3_C22466756
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+      - CASSANDRA_CLUSTER_NAME=StudentCluster
+      - CASSANDRA_DC=DC1
+      - CASSANDRA_RACK=RACK1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+    volumes:
+      - cassandra3_data:/var/lib/cassandra
+    networks:
+      - ca3-network
+
+  # -------------------------------------------------------
+  # 3. CouchDB Cluster (2 Nodes)
+  # -------------------------------------------------------
+  couchdb1:
+    image: couchdb:latest
+    container_name: couchdb1_C22466756
+    ports:
+      - "5984:5984"
+    environment:
+      - COUCHDB_USER=${COUCHDB_USER:-admin}
+      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-change_me}
+      - COUCHDB_SECRET=${COUCHDB_SECRET:-change_me}
+      - ERL_FLAGS=-name couchdb@couchdb1_C22466756
+    volumes:
+      - couchdb1_data:/opt/couchdb/data
+    networks:
+      - ca3-network
+
+  couchdb2:
+    image: couchdb:latest
+    container_name: couchdb2_C22466756
+    ports:
+      - "5985:5984"
+    environment:
+      - COUCHDB_USER=${COUCHDB_USER:-admin}
+      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-change_me}
+      - COUCHDB_SECRET=${COUCHDB_SECRET:-change_me}
+      - ERL_FLAGS=-name couchdb@couchdb2_C22466756
+    volumes:
+      - couchdb2_data:/opt/couchdb/data
+    networks:
+      - ca3-network
+
+networks:
+  ca3-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  cassandra1_data:
+  cassandra2_data:
+  cassandra3_data:
+  couchdb1_data:
+  couchdb2_data:

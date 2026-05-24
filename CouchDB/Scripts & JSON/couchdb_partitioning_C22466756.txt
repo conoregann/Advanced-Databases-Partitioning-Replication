@@ -1,0 +1,42 @@
+# ==========================================================
+# Student: C22466756
+# Phase 3: CouchDB Partitioning & Query Performance
+# ==========================================================
+
+# 1. CREATE PARTITIONED DATABASE
+# Note: partitioned=true query parameter is required
+curl -X PUT "http://admin:change_me@localhost:5984/sales_partitioned_c22466756?partitioned=true"
+
+# 2. POPULATE PARTITIONS
+# Data is logically grouped by the prefix (Electronics vs Furniture)
+
+# Partition: Electronics
+curl -X POST http://admin:change_me@localhost:5984/sales_partitioned_c22466756/_bulk_docs \
+-H "Content-Type: application/json" \
+-d '{
+    "docs": [
+        {"_id": "Electronics:TV_001", "price": 500, "region": "EU"},
+        {"_id": "Electronics:Laptop_002", "price": 1200, "region": "US"},
+        {"_id": "Electronics:Mouse_003", "price": 25, "region": "EU"}
+    ]
+}'
+
+# Partition: Furniture
+curl -X POST http://admin:change_me@localhost:5984/sales_partitioned_c22466756/_bulk_docs \
+-H "Content-Type: application/json" \
+-d '{
+    "docs": [
+        {"_id": "Furniture:Chair_001", "price": 50, "region": "EU"},
+        {"_id": "Furniture:Desk_002", "price": 150, "region": "US"}
+    ]
+}'
+
+# 3. PERFORMANCE COMPARISON
+
+# Query A: Global Query (Slower)
+# Scans all shards in the cluster. Returns all 5 docs.
+curl -v http://admin:change_me@localhost:5984/sales_partitioned_c22466756/_all_docs
+
+# Query B: Partition Query (Optimised)
+# Directed only to the specific shard holding "Electronics". Returns 3 docs.
+curl -v http://admin:change_me@localhost:5984/sales_partitioned_c22466756/_partition/Electronics/_all_docs
