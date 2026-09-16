@@ -3,7 +3,7 @@ services:
   # 1. PostgreSQL (Existing Data)
   # -------------------------------------------------------
   postgres:
-    image: postgres:17
+    image: ${POSTGRES_IMAGE:-postgres:17}
     container_name: postgres_C22466756
     restart: unless-stopped
     environment:
@@ -16,15 +16,21 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - ca3-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-devuser} -d ${POSTGRES_DB:-devdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
   # -------------------------------------------------------
   # 2. Cassandra Cluster (Teacher's Config + Ext. Ports)
   # -------------------------------------------------------
   cassandra1:
-    image: cassandra:latest
+    image: ${CASSANDRA_IMAGE:-cassandra:5.0}
     container_name: cassandra1_C22466756
     ports:
-      - "9042:9042" # Connect DBeaver here
+      - "${CASSANDRA1_PORT:-9042}:9042" # Connect DBeaver here
     environment:
       - CASSANDRA_SEEDS=cassandra1_C22466756,cassandra2_C22466756,cassandra3_C22466756
       - MAX_HEAP_SIZE=512M
@@ -40,12 +46,18 @@ services:
       - cassandra1_data:/var/lib/cassandra
     networks:
       - ca3-network
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh --request-timeout=5 localhost 9042 -e 'SELECT release_version FROM system.local' >/dev/null 2>&1"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
 
   cassandra2:
-    image: cassandra:latest
+    image: ${CASSANDRA_IMAGE:-cassandra:5.0}
     container_name: cassandra2_C22466756
     ports:
-      - "9043:9042" # Connect DBeaver here to test failover
+      - "${CASSANDRA2_PORT:-9043}:9042" # Connect DBeaver here to test failover
     environment:
       - CASSANDRA_SEEDS=cassandra1_C22466756,cassandra2_C22466756,cassandra3_C22466756
       - MAX_HEAP_SIZE=512M
@@ -60,10 +72,10 @@ services:
       - ca3-network
 
   cassandra3:
-    image: cassandra:latest
+    image: ${CASSANDRA_IMAGE:-cassandra:5.0}
     container_name: cassandra3_C22466756
     ports:
-      - "9044:9042" # Connect DBeaver here to test failover
+      - "${CASSANDRA3_PORT:-9044}:9042" # Connect DBeaver here to test failover
     environment:
       - CASSANDRA_SEEDS=cassandra1_C22466756,cassandra2_C22466756,cassandra3_C22466756
       - MAX_HEAP_SIZE=512M
@@ -81,10 +93,10 @@ services:
   # 3. CouchDB Cluster (2 Nodes)
   # -------------------------------------------------------
   couchdb1:
-    image: couchdb:latest
+    image: ${COUCHDB_IMAGE:-couchdb:3.4}
     container_name: couchdb1_C22466756
     ports:
-      - "5984:5984"
+      - "${COUCHDB1_PORT:-5984}:5984"
     environment:
       - COUCHDB_USER=${COUCHDB_USER:-admin}
       - COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-change_me}
@@ -96,10 +108,10 @@ services:
       - ca3-network
 
   couchdb2:
-    image: couchdb:latest
+    image: ${COUCHDB_IMAGE:-couchdb:3.4}
     container_name: couchdb2_C22466756
     ports:
-      - "5985:5984"
+      - "${COUCHDB2_PORT:-5985}:5984"
     environment:
       - COUCHDB_USER=${COUCHDB_USER:-admin}
       - COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-change_me}
