@@ -4,7 +4,7 @@ Portfolio repository for an Advanced Databases project demonstrating distributed
 
 ## Project Highlights
 
-- Built a Docker-based multi-database environment with PostgreSQL, a three-node Cassandra cluster, and a two-node CouchDB cluster.
+- Built a Docker-based multi-database environment with PostgreSQL, a three-node Cassandra cluster, and two CouchDB services for replication experiments.
 - Implemented PostgreSQL range, list, and hash partitioning over a data warehouse sales fact table.
 - Designed Cassandra keyspaces with different replication factors and tested consistency levels under node failure.
 - Configured CouchDB replication workflows, partitioned datasets, and conflict handling.
@@ -51,7 +51,17 @@ Portfolio repository for an Advanced Databases project demonstrating distributed
    docker compose up -d
    ```
 
-3. Connect to the services:
+3. Validate the repository and start the services:
+
+   ```bash
+   ./scripts/validate.sh
+   cd Setup
+   docker compose up -d
+   ```
+
+   The Compose file uses versioned image families and configurable host ports. Override them in `.env` when a local service already occupies one of the defaults.
+
+4. Connect to the services:
 
    | Service | Port | Purpose |
    | --- | --- | --- |
@@ -66,6 +76,8 @@ Portfolio repository for an Advanced Databases project demonstrating distributed
 
 ### PostgreSQL
 
+The PostgreSQL ETL scripts expect the source `rel_src` schema from the earlier project phase to already exist in the same database. Run the source-schema setup before the Phase 3 scripts.
+
 Run the SQL files in this order:
 
 1. `PostgreSQL/Scripts/dw_schema_C22466756.sql`
@@ -74,6 +86,8 @@ Run the SQL files in this order:
 4. `PostgreSQL/Scripts/Partitioning_Queries_C22466756.sql`
 
 The partitioning scripts demonstrate range partitioning by date, list partitioning by region, and hash partitioning by order identifier.
+
+The ETL derives the date dimension from the source orders and can be rerun safely after the schema has been created. The range setup includes yearly partitions for 2023–2026 and a default partition for dates outside that window.
 
 ### Cassandra
 
@@ -87,7 +101,7 @@ Then execute `Cassandra/Scripts/cassandra_C22466756.cql`. The script creates RF=
 
 ### CouchDB
 
-Use the files in `CouchDB/Scripts & JSON/` to reproduce partitioning, replication, exported database state, and replicator configuration. Screenshots in `CouchDB/` show one-time replication, continuous replication, bidirectional replication, partition queries, and conflict handling.
+Use the files in `CouchDB/Scripts & JSON/` to reproduce partitioning, replication, exported database state, and replicator configuration. The Compose file provides two CouchDB services; the replication commands connect them, but they are not configured as an intra-node CouchDB cluster. Screenshots in `CouchDB/` show one-time replication, continuous replication, bidirectional replication, partition queries, and conflict handling.
 
 ## Evidence
 
@@ -95,4 +109,4 @@ The repository includes the final PDF report and screenshots of the main experim
 
 ## Notes
 
-Runtime database files are intentionally excluded from Git. Docker named volumes are used for local persistence, while the portable scripts, exported JSON, report, and screenshots are versioned for review.
+Runtime database files are intentionally excluded from Git. Docker named volumes are used for local persistence, while the portable scripts, exported JSON, report, and screenshots are versioned for review. The default credentials are for local coursework only; set non-default values in `.env` for any shared or exposed environment.
