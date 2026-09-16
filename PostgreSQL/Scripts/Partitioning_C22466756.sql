@@ -20,16 +20,19 @@ CREATE TABLE fact_sales_range_C22466756 (
     PRIMARY KEY (date_key, order_id, product_key)
 ) PARTITION BY RANGE (date_key);
 
--- Create Partitions (Based on your generated data range)
--- Adjust values if your data is older/newer, but this covers 2023-2025
+-- Create yearly partitions. Upper bounds are exclusive, so each partition
+-- includes 1 January through 31 December of its named year.
 CREATE TABLE fact_sales_range_2023 PARTITION OF fact_sales_range_C22466756
-    FOR VALUES FROM (20230101) TO (20231231);
+    FOR VALUES FROM (20230101) TO (20240101);
 
 CREATE TABLE fact_sales_range_2024 PARTITION OF fact_sales_range_C22466756
-    FOR VALUES FROM (20240101) TO (20241231);
+    FOR VALUES FROM (20240101) TO (20250101);
 
 CREATE TABLE fact_sales_range_2025 PARTITION OF fact_sales_range_C22466756
-    FOR VALUES FROM (20250101) TO (20251231);
+    FOR VALUES FROM (20250101) TO (20260101);
+
+CREATE TABLE fact_sales_range_2026 PARTITION OF fact_sales_range_C22466756
+    FOR VALUES FROM (20260101) TO (20270101);
 
 CREATE TABLE fact_sales_range_default PARTITION OF fact_sales_range_C22466756 DEFAULT;
 

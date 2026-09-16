@@ -7,16 +7,30 @@
 -- Set the search path to your new schema
 SET search_path = dw_lite_c22466756, public;
 
+-- Make the load rerunnable when the schema already exists.
+TRUNCATE TABLE fact_sales, dim_date, dim_customer, dim_product, dim_merchant;
+
 -- -------------------------
 -- 1. POPULATE DIMENSIONS (from scaffold)
 -- These should be run first to ensure referential integrity.
 -- -------------------------
 INSERT INTO dim_date(date_key, date_actual, year, month, day)
-SELECT to_char(d,'YYYYMMDD')::int, d,
+SELECT to_char(d::date, 'YYYYMMDD')::int,
+       d::date,
        EXTRACT(YEAR FROM d)::int,
        EXTRACT(MONTH FROM d)::int,
        EXTRACT(DAY FROM d)::int
-FROM generate_series(current_date - interval '90 days', current_date, interval '1 day') d;
+FROM (
+    SELECT MIN(order_date)::date AS min_date,
+           MAX(order_date)::date AS max_date
+    FROM rel_src.orders
+) bounds
+CROSS JOIN LATERAL generate_series(
+    bounds.min_date,
+    bounds.max_date,
+    interval '1 day'
+) AS dates(d)
+WHERE bounds.min_date IS NOT NULL;
 
 INSERT INTO dim_customer(customer_key, region, full_name, age_band)
 SELECT c.customer_id,
@@ -47,10 +61,6 @@ FROM rel_src.merchants m
 JOIN rel_src.regions r ON m.region_id = r.region_id;
 
 
--- -------------------------
--- 3. POPULATE THE fact_sales TABLE
--- This is the main ETL step, joining transactional tables to dimensions.
--- -------------------------
 -- -------------------------
 -- 3. POPULATE THE fact_sales TABLE
 -- This is the main ETL step, joining transactional tables to dimensions.
@@ -88,7 +98,7 @@ FROM
 JOIN
     rel_src.orders o ON oi.order_id = o.order_id
 JOIN
-    dim_date d ON d.date_actual = o.order_date
+    dim_date d ON d.date_actual = o.order_date::date
 JOIN
     dim_merchant m ON m.merchant_id = o.merchant_id
 GROUP BY
